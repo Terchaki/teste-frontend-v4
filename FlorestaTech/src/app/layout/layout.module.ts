@@ -1,8 +1,6 @@
-import { MapaComponent } from './../features/mapa/mapa.component';
 // Bibliotecas Angular
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 // Rotas
 import { RouterModule } from '@angular/router';
@@ -17,7 +15,6 @@ import { FooterComponent } from './footer/footer.component';
     LayoutComponent,
     HeaderComponent,
     FooterComponent,
-    MapaComponent
   ],
   imports: [
     CommonModule,

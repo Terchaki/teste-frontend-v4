@@ -3,10 +3,10 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 const routes: Routes = [
+  // Redirecionamento inicial para map/tracking equipment
   {
     path: '',
-    component: LayoutComponent,
-    redirectTo: '',
+    redirectTo: 'tracking-equipment',
     pathMatch: 'full',
   },
   {
@@ -15,16 +15,21 @@ const routes: Routes = [
     children: [
       {
         path: 'dashboard',
-        loadChildren: () => import('./features/dashboard/dashboard.module').then(
-          (m) => m.DashboardModule
-        ),
+        loadChildren: () =>
+          import('./features/dashboard/dashboard.module').then(
+            (m) => m.DashboardModule
+          ),
+      },
+      {
+        path: 'tracking-equipment', // essa rota vem do MapaRoutingModule
+        loadChildren: () =>
+          import('./features/map/mapa.module').then((m) => m.MapaModule),
       },
     ],
   },
-  /** Rota Coringa */
   {
     path: '**',
-    redirectTo: '',
+    redirectTo: 'tracking-equipment',
     pathMatch: 'full',
   },
 ];
@@ -33,4 +38,4 @@ const routes: Routes = [
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

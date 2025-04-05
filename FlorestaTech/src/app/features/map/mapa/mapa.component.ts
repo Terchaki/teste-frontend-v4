@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import * as L from 'leaflet';
+import { equipamentModel } from 'src/app/shared/models/equipament.models';
 import { equipamentDetailModel } from 'src/app/shared/models/equipamentDetail.model';
 import { equipmentDataModel } from 'src/app/shared/models/equipmentDataModel.model';
 import { equipmentListGoupModel } from 'src/app/shared/models/equipmentListGoup.model';
@@ -14,17 +15,69 @@ import { DataServiceService } from 'src/app/shared/services/data-service.service
   styleUrls: ['./mapa.component.scss'],
 })
 export class MapaComponent implements OnInit {
+  /**
+   * Propriedades da classe.
+   */
   map!: L.Map;
-  allDataEquipaments!: equipamentDetailModel;
-  equipamentsGroup!: equipmentListGoupModel[];
-  equipamentsRecents: equipmentPositionHistoryModel[] = [];
   markers: L.Marker[] = [];
   polylines: L.Polyline[] = [];
+  polylinesGenerated: boolean = false;
+  allDataEquipaments!: equipamentDetailModel;
+  equipamentsGroup!: equipmentListGoupModel[];
+  equipamentsGroupTemp!: equipmentListGoupModel[];
+  listEquipaments!: equipamentModel[];
+  equipamentSelect: equipamentModel | any = '';
+  listModelEquipaments!: equipmentDataModel[];
+  listModelEquipamentsSelect: equipamentModel | any = '';
+  listStateEquipaments!: equipamentStateModel[];
+  listStateEquipamentstSelect: equipamentModel | any = '';
 
   constructor(private dataServiceService: DataServiceService) {}
 
   ngOnInit(): void {
+    this.getEquipment();
+    this.getModelEquipament();
+    this.getStateEquipament();
     this.getEquipamentFullDetail();
+  }
+
+  // Pegando a listagem de Equipamentos.
+  getEquipment() {
+    this.listEquipaments = [];
+
+    this.dataServiceService.getDadosEquipaments().subscribe({
+      next: (res: equipamentModel[]) => {
+        res.forEach((el) => {
+          this.listEquipaments.push(el);
+        });
+      },
+    });
+  }
+
+  // Pegando a listagem de Modelos.
+  getModelEquipament() {
+    this.listModelEquipaments = [];
+
+    this.dataServiceService.getDadosEquipamentModel().subscribe({
+      next: (res: equipmentDataModel[]) => {
+        res.forEach((el) => {
+          this.listModelEquipaments.push(el);
+        });
+      },
+    });
+  }
+
+  // Pegando a listagem de Estados.
+  getStateEquipament() {
+    this.listStateEquipaments = [];
+
+    this.dataServiceService.getDadosEquipamentState().subscribe({
+      next: (res: equipamentStateModel[]) => {
+        res.forEach((el) => {
+          this.listStateEquipaments.push(el);
+        });
+      },
+    });
   }
 
   getEquipamentFullDetail() {
@@ -40,6 +93,7 @@ export class MapaComponent implements OnInit {
 
   group() {
     this.equipamentsGroup = [];
+    this.equipamentsGroupTemp = [];
 
     for (
       let index = 0;
@@ -69,6 +123,7 @@ export class MapaComponent implements OnInit {
           this.allDataEquipaments.equipments[index].id
         ),
       });
+      this.equipamentsGroupTemp = this.equipamentsGroup;
     }
   }
 
@@ -131,18 +186,6 @@ export class MapaComponent implements OnInit {
     );
 
     return positions;
-  }
-
-  getStateEquipament(equipmentModelId: string): {
-    name: string;
-    color: string;
-  } {
-    let state: {
-      name: string;
-      color: string;
-    } = { name: '', color: '' };
-
-    return state;
   }
 
   getStateHistory(id: string): any {
@@ -208,19 +251,43 @@ export class MapaComponent implements OnInit {
      */
     this.map = L.map('map', {
       center: [lat, lon], // Coordenadas de Caldas Novas - GO, (Latitude e Longitude).
-      zoom: 8, // Nível de zoom
+      zoom: 10, // Nível de zoom
     });
 
     // Adicionar um tile layer (Google Maps, OpenStreetMap, etc.)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-    }).addTo(this.map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {}).addTo(
+      this.map
+    );
 
-    this.markerMaps();
+    if (!this.polylinesGenerated) {
+      this.markerMaps();
+    }
   }
 
   // Adiciona os equipamentos no mapa.
-  markerMaps() {
+  markerMaps(filterModelOrState?: boolean, param?: string) {
+    this.equipamentsGroup = this.equipamentsGroupTemp;
+
+    if (filterModelOrState && param === 'model') {
+      this.equipamentsGroup = this.equipamentsGroup.filter(
+        (item) => item.modelo.name === this.listModelEquipamentsSelect
+      );
+    } else if (filterModelOrState && param === 'state') {
+      let equipamentsState: equipmentListGoupModel[] = [];
+
+      this.equipamentsGroup?.forEach((element) => {
+        let index = element.positionHitory?.length;
+
+        if (
+          element.stateHistory[index - 1].equipmentStateId ===
+          this.listStateEquipamentstSelect
+        ) {
+          equipamentsState.push(element);
+        }
+      });
+      this.equipamentsGroup = equipamentsState;
+    }
+
     this.equipamentsGroup?.forEach((equip: equipmentListGoupModel) => {
       let index = equip.positionHitory?.length;
       let latitude = equip.positionHitory[index - 1].lat;
@@ -263,7 +330,8 @@ export class MapaComponent implements OnInit {
         </span></b><br>
         <button type="button" class="btn btn-primary mt-1 p-0 py-1 w-100 trajectory-btn" data-id="${
           equip.id
-        }">Histórico de Trajeto</button>`
+        }">Histórico de Trajeto</button><br>
+        <button class="btn btn-secondary mt-1 p-0 py-1 w-100">Relatórios</button>`
       );
 
       marker.on('popupopen', () => {
@@ -340,20 +408,153 @@ export class MapaComponent implements OnInit {
           const button = document.querySelector('.close-trajectory-btn');
           if (button) {
             button.addEventListener('click', () => {
-              // Remove o mapa atual
-              this.map.remove();
-              // Gera o mapa novamente com os marcadores atuais
-              this.initMap();
+              this.reloadMap();
+              // Zerando Filtro
+              this.equipamentSelect = '';
+              this.listModelEquipamentsSelect = '';
+              this.listStateEquipamentstSelect = '';
             });
           }
         });
-        // this.markers.push(marker); // Armazena novos marcadores do trajeto
       });
+      this.polylinesGenerated = true;
 
       const polyline = L.polyline(latlngs, { color: 'blue' }).addTo(this.map);
       this.polylines.push(polyline); // Armazena a linha do trajeto
 
       this.map.fitBounds(polyline.getBounds()); // Zoom no trajeto
+    }
+  }
+
+  markerMapsFilter() {
+    this.equipamentsGroup = this.equipamentsGroupTemp;
+    let equipeSelect: equipmentListGoupModel | any = [];
+
+    equipeSelect = this.equipamentsGroup.find(
+      (obj) => obj.id === this.equipamentSelect
+    );
+    console.log(equipeSelect);
+    let index = equipeSelect.positionHitory?.length;
+    let latitude = equipeSelect.positionHitory[index - 1].lat;
+    let longitude = equipeSelect.positionHitory[index - 1].lon;
+
+    const hours = String(equipeSelect.positionHitory[index - 1].date).substring(
+      11,
+      16
+    );
+
+    const marker = L.marker([latitude, longitude], {
+      icon: L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background-color: ${this.getNameStateEquipament(
+          'color',
+          equipeSelect.stateHistory[index - 1].equipmentStateId
+        )}; width: 15px; height: 15px; border-radius: 50%;"></div>`,
+        iconSize: [15, 15],
+      }),
+    }).addTo(this.map);
+
+    // Adiciona à lista de marcadores
+    this.markers.push(marker);
+
+    marker.bindPopup(
+      `<b>${equipeSelect.name}</b><br>
+        <span>Última posição em: ${new Date(
+          equipeSelect.positionHitory[index - 1].date
+        ).toLocaleDateString()} às ${hours}h</span><br>
+        <span>Modelo: ${equipeSelect.modelo.name}</span><br>
+        Estado:<b>
+        <span style="color: ${this.getNameStateEquipament(
+          'color',
+          equipeSelect.stateHistory[index - 1].equipmentStateId
+        )};">
+          ${this.getNameStateEquipament(
+            'state',
+            equipeSelect.stateHistory[index - 1].equipmentStateId
+          )}
+        </span></b><br>
+        <button type="button" class="btn btn-primary mt-1 p-0 py-1 w-100 trajectory-btn" data-id="${
+          equipeSelect.id
+        }">Histórico de Trajeto</button><br>
+        <button class="btn btn-secondary mt-1 p-0 py-1 w-100">Relatórios</button>`
+    );
+
+    marker.on('popupopen', () => {
+      const button = document.querySelector('.trajectory-btn');
+      if (button) {
+        button.addEventListener('click', () => {
+          const equipId = button.getAttribute('data-id');
+          this.trajectoryEquipament(equipId);
+        });
+      }
+    });
+  }
+
+  reloadMap() {
+    this.polylinesGenerated = false;
+    this.map.remove();
+    this.initMap();
+  }
+
+  loadingMapFilter() {
+    if (this.polylinesGenerated) {
+      this.map.remove();
+      this.initMap();
+    }
+  }
+
+  /**
+   * Filtro de equipamento por nome.
+   */
+  filterNameEquipament() {
+    // Zerando os filtros Estado e Modelo.
+    this.listModelEquipamentsSelect = '';
+    this.listStateEquipamentstSelect = '';
+
+    // Limpando os marcadores e linhas anteriores.
+    this.clearMapElements();
+    if (this.equipamentSelect) {
+      this.loadingMapFilter();
+      this.markerMapsFilter();
+    } else {
+      this.reloadMap();
+    }
+  }
+
+  /**
+   * Filtro de equipamento por Modelo.
+   */
+  filterModeloEquipament() {
+    // Zerando os filtros Estado e Modelo.
+    this.equipamentSelect = '';
+    this.listStateEquipamentstSelect = '';
+
+    // Limpando os marcadores e linhas anteriores.
+    this.clearMapElements();
+    if (this.listModelEquipamentsSelect) {
+      this.loadingMapFilter();
+      this.markerMaps(true, 'model');
+    } else {
+      this.reloadMap();
+    }
+  }
+
+  /**
+   * Filtro de equipamento por Estado.
+   */
+  // equipamentsState: equipmentListGoupModel[] = [];
+  filterStateEquipament() {
+    // Zerando os filtros Estado e Modelo.
+    this.equipamentSelect = '';
+    this.listModelEquipamentsSelect = '';
+
+    // // Limpando os marcadores e linhas anteriores.
+    this.clearMapElements();
+    if (this.listStateEquipamentstSelect) {
+      this.loadingMapFilter();
+      this.markerMaps(true, 'state');
+    } else {
+      this.reloadMap();
     }
   }
 }
