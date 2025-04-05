@@ -1,0 +1,23 @@
+footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-items: center;
+  padding: 0 150px;
+  background-color: #3c4d5a;
+  color: #fff;
+
+  p {
+    text-align: center;
+    margin-bottom: 0;
+    padding: 10px 0;
+    transition: 0.3s;
+
+    a {
+      &:hover {
+        font-weight: 500;
+        color: aquamarine;
+      }
+    }
+  }
+}
