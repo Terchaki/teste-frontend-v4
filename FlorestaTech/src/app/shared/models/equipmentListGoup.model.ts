@@ -5,7 +5,7 @@ export class equipmentListGoupModel {
     public name: string,
     public modelo: {
       name: string | any;
-      hourlyEarnings: { state: string; value: number, color: string }[];
+      hourlyEarnings: { state: string; value: number; color: string }[];
     },
     public positionHitory:
       | {
@@ -13,10 +13,6 @@ export class equipmentListGoupModel {
           lat: number;
           lon: number;
         }[],
-    // public state: {
-    //   name: string,
-    //   color: string
-    // },
     public stateHistory: { date: Date | string; equipmentStateId: string }[]
   ) {}
 }

@@ -1,5 +1,21 @@
 import { Component, OnInit } from '@angular/core';
+
+// RXJS
+import { Subject } from 'rxjs';
+
+// Mapa Leaflet;
 import * as L from 'leaflet';
+
+// Services
+import { DataServiceService } from 'src/app/shared/services/data-service.service';
+
+// Ngx Bootstrap
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+
+// COmponentes
+import { RelatoriosComponent } from '../relatorios/relatorios.component';
+
+// Models
 import { equipamentModel } from 'src/app/shared/models/equipament.models';
 import { equipamentDetailModel } from 'src/app/shared/models/equipamentDetail.model';
 import { equipmentDataModel } from 'src/app/shared/models/equipmentDataModel.model';
@@ -7,7 +23,6 @@ import { equipmentListGoupModel } from 'src/app/shared/models/equipmentListGoup.
 import { equipmentPositionHistoryModel } from 'src/app/shared/models/equipmentPositionHistory.model';
 import { equipamentStateModel } from 'src/app/shared/models/equipmentState.model';
 import { equipmentStateHistoryModel } from 'src/app/shared/models/equipmentStateHistory.model';
-import { DataServiceService } from 'src/app/shared/services/data-service.service';
 
 @Component({
   selector: 'app-mapa',
@@ -32,7 +47,21 @@ export class MapaComponent implements OnInit {
   listStateEquipaments!: equipamentStateModel[];
   listStateEquipamentstSelect: equipamentModel | any = '';
 
-  constructor(private dataServiceService: DataServiceService) {}
+  /**
+   * variáveis do Modal.
+   */
+  modalRef!: BsModalRef;
+  modalParams: any;
+  config = {
+    keyboard: false,
+    ignoreBackdropClick: true,
+    class: 'modal-dialog-centered modal-xl',
+  };
+
+  constructor(
+    private dataServiceService: DataServiceService,
+    private modalService: BsModalService
+  ) {}
 
   ngOnInit(): void {
     this.getEquipment();
@@ -331,7 +360,9 @@ export class MapaComponent implements OnInit {
         <button type="button" class="btn btn-primary mt-1 p-0 py-1 w-100 trajectory-btn" data-id="${
           equip.id
         }">Histórico de Trajeto</button><br>
-        <button class="btn btn-secondary mt-1 p-0 py-1 w-100">Relatórios</button>`
+        <button type="button" class="btn btn-secondary mt-1 p-0 py-1 w-100 reports-btn"  data-id="${
+          equip.id
+        }">Relatórios</button>`
       );
 
       marker.on('popupopen', () => {
@@ -343,6 +374,19 @@ export class MapaComponent implements OnInit {
           });
         }
       });
+
+      marker.on('popupopen', () => {
+        const buttonReports = document.querySelector('.reports-btn');
+        if (buttonReports) {
+          buttonReports.addEventListener('click', () => {
+            const equipId = buttonReports.getAttribute('data-id');
+            const equipament = this.equipamentsGroupTemp?.find(
+              (e) => e.id === equipId
+            );
+            this.openComponentRelatorios(equipament);
+          });
+        }
+      });
     });
   }
 
@@ -351,6 +395,32 @@ export class MapaComponent implements OnInit {
     this.polylines.forEach((p) => this.map.removeLayer(p));
     this.markers = [];
     this.polylines = [];
+  }
+
+  openComponentRelatorios(equipament: equipmentListGoupModel | any) {
+    // Ordenando para a mais recente.
+    equipament.positionHitory.sort(
+      (a: any, b: any) =>
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    equipament.stateHistory.sort(
+      (a: any, b: any) =>
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const initialState = {
+      equipament: equipament,
+    };
+
+    this.modalParams = Object.assign({}, this.config, {
+      initialState,
+    });
+    this.modalRef = this.modalService.show(
+      RelatoriosComponent,
+      this.modalParams
+    );
+    this.modalRef.content.onClose = new Subject<any>();
+    this.modalRef.content.onClose.subscribe((resultado: any) => {});
   }
 
   trajectoryEquipament(equipemantId: string | any) {
@@ -476,7 +546,9 @@ export class MapaComponent implements OnInit {
         <button type="button" class="btn btn-primary mt-1 p-0 py-1 w-100 trajectory-btn" data-id="${
           equipeSelect.id
         }">Histórico de Trajeto</button><br>
-        <button class="btn btn-secondary mt-1 p-0 py-1 w-100">Relatórios</button>`
+        <button type="button" class="btn btn-secondary mt-1 p-0 py-1 w-100 reports-btn"  data-id="${
+          equipeSelect.id
+        }">Relatórios</button>`
     );
 
     marker.on('popupopen', () => {
@@ -485,6 +557,19 @@ export class MapaComponent implements OnInit {
         button.addEventListener('click', () => {
           const equipId = button.getAttribute('data-id');
           this.trajectoryEquipament(equipId);
+        });
+      }
+    });
+
+    marker.on('popupopen', () => {
+      const buttonReports = document.querySelector('.reports-btn');
+      if (buttonReports) {
+        buttonReports.addEventListener('click', () => {
+          const equipId = buttonReports.getAttribute('data-id');
+          const equipament = this.equipamentsGroupTemp?.find(
+            (e) => e.id === equipId
+          );
+          this.openComponentRelatorios(equipament);
         });
       }
     });
