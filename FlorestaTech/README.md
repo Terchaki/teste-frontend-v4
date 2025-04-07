@@ -64,5 +64,4 @@ Para conseguir executar o projeto localmente siga estes passos.
 - E-mail: lucas.dev.contato@outlook.com
 
 ## 🛠 Autor 
-- Deploy: [Seu LinkedIn](https://linkedin.com/in/seu-nome)
-- Vídeo de Apresentação: [Seu LinkedIn](https://linkedin.com/in/seu-nome)
+- Vídeo de Apresentação: [Youtube](https://youtu.be/OepSdNwh4Rg)
