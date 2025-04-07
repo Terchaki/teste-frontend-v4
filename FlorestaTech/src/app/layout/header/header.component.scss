@@ -42,5 +42,15 @@ header {
 @media (max-width: 600px) {
   header {
     padding: 0 30px;
+
+    ul {
+      padding-left: 5px;
+      li {
+        p {
+          font-size: 0.60rem;
+          white-space: nowrap;
+        }
+      }
+    }
   }
 }

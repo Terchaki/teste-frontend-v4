@@ -5,13 +5,13 @@ import { RouterModule, Routes } from '@angular/router';
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'grafico-quantidade',
+    redirectTo: 'graphics',
     pathMatch: 'full',
   },
   {
-    path: 'grafico-quantidade',
+    path: 'graphics',
     component: ChartComponent,
-    title: 'grafico quant',
+    title: 'FlorestaTech - Dashboards',
   },
 ];
 

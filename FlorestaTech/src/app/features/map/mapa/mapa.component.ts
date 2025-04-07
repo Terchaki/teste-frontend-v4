@@ -113,7 +113,6 @@ export class MapaComponent implements OnInit {
     this.dataServiceService.getEquipamentFullDetail().subscribe({
       next: (data) => {
         this.allDataEquipaments = data; // Agora os dados estão disponíveis apenas após todas as requisições serem concluídas
-        console.log(this.allDataEquipaments);
         this.group();
         this.initMap();
       },
@@ -362,7 +361,7 @@ export class MapaComponent implements OnInit {
         }">Histórico de Trajeto</button><br>
         <button type="button" class="btn btn-secondary mt-1 p-0 py-1 w-100 reports-btn"  data-id="${
           equip.id
-        }">Histórico</button>`
+        }">Histórico de Posições</button>`
       );
 
       marker.on('popupopen', () => {
@@ -421,7 +420,6 @@ export class MapaComponent implements OnInit {
     );
     this.modalRef.content.onClose = new Subject<any>();
     this.modalRef.content.onClose.subscribe((res: any) => {
-      console.log(res);
     });
   }
 
@@ -505,7 +503,6 @@ export class MapaComponent implements OnInit {
     equipeSelect = this.equipamentsGroup.find(
       (obj) => obj.id === this.equipamentSelect
     );
-    console.log(equipeSelect);
     let index = equipeSelect.positionHitory?.length;
     let latitude = equipeSelect.positionHitory[index - 1].lat;
     let longitude = equipeSelect.positionHitory[index - 1].lon;
@@ -550,7 +547,7 @@ export class MapaComponent implements OnInit {
         }">Histórico de Trajeto</button><br>
         <button type="button" class="btn btn-secondary mt-1 p-0 py-1 w-100 reports-btn"  data-id="${
           equipeSelect.id
-        }">Histórico</button>`
+        }">Histórico de Posições</button>`
     );
 
     marker.on('popupopen', () => {

@@ -30,7 +30,9 @@ export class RelatoriosComponent implements OnInit {
     private generatePdfService: GeneratePdfService
   ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.statesEquipamants();
+  }
 
   // Fechando Modal
   closeModal() {
@@ -38,15 +40,14 @@ export class RelatoriosComponent implements OnInit {
     this.bsModalRef.hide();
   }
 
-  // Pegando o Estado | Cor
   getStateEquipament(date: Date | string, param: string): string {
     let text!: string;
 
-    const equipamant = this.equipament.stateHistory?.find(
+    const equipamant = this.equipament.stateHistory.find(
       (item) => item.date === date
     );
 
-    const state = this.equipamentStates?.find(
+    const state = this.equipamentStates.find(
       (item) => item.id === equipamant?.equipmentStateId
     );
     if (state) {
@@ -66,11 +67,81 @@ export class RelatoriosComponent implements OnInit {
     return text;
   }
 
-  // Tratamento de horas.
   getHours(data: string | Date): string {
     let hours!: string;
     hours = data.toString().substring(11, 16);
     return hours;
+  }
+
+  statesEquipamants() {
+    this.equipamentStates = [];
+
+    this.dataServiceService.getDadosEquipamentState().subscribe({
+      next: (res) => {
+        res.forEach((el) => {
+          this.equipamentStates.push(el);
+        });
+      },
+    });
+  }
+
+  gePerformance(state: string, data: string | Date): number {
+    let dat: any[] = [];
+
+    for (let index = 0; index < this.equipament.stateHistory.length; index++) {
+      if (this.equipament.stateHistory[index].date === data) {
+        dat.push(this.equipament.stateHistory[index]);
+      }
+    }
+
+    let total = 0;
+
+    dat.forEach((item) => {
+      for (
+        let index = 0;
+        index < this.equipament.modelo.hourlyEarnings.length;
+        index++
+      ) {
+        if (
+          this.getNameStateEquipament(item.equipmentStateId) ===
+          this.equipament.modelo.hourlyEarnings[index].state
+        ) {
+          total += this.equipament.modelo.hourlyEarnings[index].value;
+        }
+      }
+    });
+
+    return total;
+  }
+
+  getProductivity(state: string, data: string | Date): any {
+    let productivity: any = '';
+    if (state === 'Sem informação') {
+      productivity = 0;
+    }
+
+    return productivity;
+  }
+
+  getNameStateEquipament(id: string): string {
+    let states: string = '';
+
+    switch (id) {
+      case '0808344c-454b-4c36-89e8-d7687e692d57':
+        states = 'Operando';
+        break;
+      case 'baff9783-84e8-4e01-874b-6fd743b875ad':
+        states = 'Parado';
+        break;
+      case '03b2d446-e3ba-4c82-8dc2-a5611fea6e1f':
+        states = 'Manutenção';
+        break;
+
+      default:
+        break;
+    }
+
+    return states;
   }
 
   // Função para montar e chamar o serviço que gera o PDF.
