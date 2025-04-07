@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/floresta-tech",
+            "outputPath": "dist/floresta-tech-app",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": [
@@ -37,7 +37,13 @@
             "scripts": [
               "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
             ],
-            "allowedCommonJsDependencies": ["leaflet"]
+            "allowedCommonJsDependencies": [
+            "leaflet",
+            "canvg",
+            "core-js",
+            "raf",
+            "rgbcolor",
+            "html2canvas"]
           },
           "configurations": {
             "production": {
