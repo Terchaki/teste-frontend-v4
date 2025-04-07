@@ -362,7 +362,7 @@ export class MapaComponent implements OnInit {
         }">Histórico de Trajeto</button><br>
         <button type="button" class="btn btn-secondary mt-1 p-0 py-1 w-100 reports-btn"  data-id="${
           equip.id
-        }">Relatórios</button>`
+        }">Histórico</button>`
       );
 
       marker.on('popupopen', () => {
@@ -420,7 +420,9 @@ export class MapaComponent implements OnInit {
       this.modalParams
     );
     this.modalRef.content.onClose = new Subject<any>();
-    this.modalRef.content.onClose.subscribe((resultado: any) => {});
+    this.modalRef.content.onClose.subscribe((res: any) => {
+      console.log(res);
+    });
   }
 
   trajectoryEquipament(equipemantId: string | any) {
@@ -548,7 +550,7 @@ export class MapaComponent implements OnInit {
         }">Histórico de Trajeto</button><br>
         <button type="button" class="btn btn-secondary mt-1 p-0 py-1 w-100 reports-btn"  data-id="${
           equipeSelect.id
-        }">Relatórios</button>`
+        }">Histórico</button>`
     );
 
     marker.on('popupopen', () => {

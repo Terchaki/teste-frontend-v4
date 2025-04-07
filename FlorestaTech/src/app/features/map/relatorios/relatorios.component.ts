@@ -1,8 +1,11 @@
-import { DataServiceService } from 'src/app/shared/services/data-service.service';
 import { Component, OnInit } from '@angular/core';
 
 // NGX-Bootstrap
-import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { BsModalRef } from 'ngx-bootstrap/modal';
+
+// Services
+import { GeneratePdfService } from './../../../shared/services/generate-pdf.service';
+import { DataServiceService } from 'src/app/shared/services/data-service.service';
 
 // Models
 import { equipmentListGoupModel } from 'src/app/shared/models/equipmentListGoup.model';
@@ -22,15 +25,12 @@ export class RelatoriosComponent implements OnInit {
   equipamentStates!: equipamentStateModel[];
 
   constructor(
-    private modalService: BsModalService,
     private bsModalRef: BsModalRef,
-    private dataServiceService: DataServiceService
+    private dataServiceService: DataServiceService,
+    private generatePdfService: GeneratePdfService
   ) {}
 
-  ngOnInit() {
-    this.statesEquipamants();
-    console.log(this.equipament);
-  }
+  ngOnInit() {}
 
   // Fechando Modal
   closeModal() {
@@ -38,14 +38,15 @@ export class RelatoriosComponent implements OnInit {
     this.bsModalRef.hide();
   }
 
+  // Pegando o Estado | Cor
   getStateEquipament(date: Date | string, param: string): string {
     let text!: string;
 
-    const equipamant = this.equipament.stateHistory.find(
+    const equipamant = this.equipament.stateHistory?.find(
       (item) => item.date === date
     );
 
-    const state = this.equipamentStates.find(
+    const state = this.equipamentStates?.find(
       (item) => item.id === equipamant?.equipmentStateId
     );
     if (state) {
@@ -65,88 +66,45 @@ export class RelatoriosComponent implements OnInit {
     return text;
   }
 
+  // Tratamento de horas.
   getHours(data: string | Date): string {
     let hours!: string;
     hours = data.toString().substring(11, 16);
     return hours;
   }
 
-  statesEquipamants() {
-    this.equipamentStates = [];
+  // Função para montar e chamar o serviço que gera o PDF.
+  gerarPdf() {
+    const dados: { horario: string | Date; latLong: string; estado: string }[] =
+      [];
 
-    this.dataServiceService.getDadosEquipamentState().subscribe({
-      next: (res) => {
-        res.forEach((el) => {
-          this.equipamentStates.push(el);
-        });
-      },
-    });
-  }
-
-  gePerformance(state: string, data: string | Date): number {
-    let dat: any[] = [];
-
-    for (let index = 0; index < this.equipament.stateHistory.length; index++) {
-      if (this.equipament.stateHistory[index].date === data) {
-        dat.push(this.equipament.stateHistory[index]);
+    this.equipament.positionHitory.forEach((el) => {
+      // Ajustando Data
+      let date = new Date(el.date);
+      date.setHours(date.getHours() + 3);
+      if (date.getHours() === 0) {
+        date.setHours(date.getHours() - 24);
       }
-    }
 
-    let total = 0;
-
-    dat.forEach((item) => {
-      for (
-        let index = 0;
-        index < this.equipament.modelo.hourlyEarnings.length;
-        index++
-      ) {
-        if (
-          this.getNameStateEquipament(item.equipmentStateId) ===
-          this.equipament.modelo.hourlyEarnings[index].state
-        ) {
-          total += this.equipament.modelo.hourlyEarnings[index].value;
-        }
-      }
+      dados.push({
+        horario: date,
+        latLong: `[ ${el.lat} | ${el.lon} ]`,
+        estado: this.getStateEquipament(el.date, 'state'),
+      });
     });
 
-    return total;
-  }
+    const columns = ['Horário', 'Latitude - Longitude', 'Estado'];
 
-  getProductivity(state: string, data: string | Date): any {
-    let productivity: any = '';
-    if (state === 'Sem informação') {
-      productivity = 0;
-    }
-    console.log(state);
-
-    return productivity;
-  }
-
-  getNameStateEquipament(id: string): string {
-    let states: string = '';
-
-    switch (id) {
-      case '0808344c-454b-4c36-89e8-d7687e692d57':
-        states = 'Operando';
-        break;
-      case 'baff9783-84e8-4e01-874b-6fd743b875ad':
-        states = 'Parado';
-        break;
-      case '03b2d446-e3ba-4c82-8dc2-a5611fea6e1f':
-        states = 'Manutenção';
-        break;
-
-      default:
-        break;
-    }
-
-    return states;
-  }
-
-  test(data: string | Date) {
-    this.equipament.stateHistory.forEach((el) => {
-      if (data.toString().substring(0, 10) === el.date) {
-      }
-    });
+    const nameEquipament: { name: string; modelo: string } = {
+      name: this.equipament.name,
+      modelo: this.equipament.modelo.name,
+    };
+    this.generatePdfService.generateTablePDF(
+      nameEquipament, // Nome/ Modelo do equipamento
+      'FlorestaTech - Histórico de Posições e estados do equipamento', // Titulo
+      columns, // Titulo das colunas
+      dados, // Dados das Colunas
+      `historico-${this.equipament.name}.pdf` // Nome do arquivo.
+    );
   }
 }

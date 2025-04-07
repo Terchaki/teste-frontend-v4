@@ -7,6 +7,10 @@
   .name-enterprise {
     text-align: center;
 
+    br {
+      display: none;
+    }
+
     span {
       font-size: 2.5rem;
       font-family: "Boldonse", system-ui;
@@ -52,13 +56,32 @@
 }
 
 @media (max-width: 768px) {
+  .filter {
+    .name-enterprise {
+
+      br {
+        display: block;
+      }
+    }
+  }
+
   #map {
-    height: 60vh;
+    height: 50vh;
   }
 }
 
 @media (max-width: 480px) {
   #map {
-    height: 50vh;
+    height: 40vh;
+  }
+}
+
+@media (max-width: 380px) {
+  .filter {
+    .name-enterprise {
+      span {
+        font-size: 1.5rem;
+      }
+    }
   }
 }

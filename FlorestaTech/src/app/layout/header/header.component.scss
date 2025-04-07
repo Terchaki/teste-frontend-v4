@@ -4,7 +4,7 @@ header {
   height: 60px;
   box-shadow: 0px 3px 6px #0000003d;
   align-items: center;
-  padding: 0 150px;
+  padding: 0 120px;
   background-color: #3c4d5a;
   color: #fff;
 
@@ -30,5 +30,17 @@ header {
         border-bottom: 2px solid aquamarine;
       }
     }
+  }
+}
+
+@media (max-width: 1100px) {
+  header {
+    padding: 0 100px;
+  }
+}
+
+@media (max-width: 600px) {
+  header {
+    padding: 0 30px;
   }
 }
